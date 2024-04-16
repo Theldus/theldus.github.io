@@ -28,7 +28,7 @@ My environment:
 # How to do it?
 (If you are already happy with the results and have no intention of reproducing this, you can stop here)
 
-Well, all you need is an old PC and a smartphone that supports [Termux](http://termux.dev/). (Preferably, it's interesting to run Geekbench on both sides to get an initial idea: if your phone is *much* slower than your PC, there probably won't be any performance gains and may even slow down the build process, given the overhead that distcc adds to the build process.)
+Well, all you need is an old PC and a smartphone that supports [Termux](https://termux.dev/). (Preferably, it's interesting to run Geekbench on both sides to get an initial idea: if your phone is *much* slower than your PC, there probably won't be any performance gains and may even slow down the build process, given the overhead that distcc adds to the build process.)
 
 Surprisingly there aren't many things to do, the most difficult part Termux already does for you, but below are the instructions to be done on your phone and on your PC.
 
@@ -187,4 +187,4 @@ Speaking of feasibility, I think using distcc with your smartphone is really via
 
 [distcc Arch Wiki](https://wiki.archlinux.org/title/Distcc)
 
-[Termux](http://termux.dev/)
+[Termux](https://termux.dev/)

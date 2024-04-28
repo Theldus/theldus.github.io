@@ -395,10 +395,40 @@ I understand that supporting multiple SIMD code variations is challenging, and w
 
 If they want to implement support solely for `AVX2`, that's fine. But please ensure that `geekbench_x86_64` runs **exclusively** with SSE2. Otherwise, we're comparing apples to oranges.
 
+## Is There a Fix?
+**Surprisingly, yes!**
+
+Dissatisfied with the results, I decided to investigate the `geekbench_x86_64` binary once again and found the following function: `5e8a70 <_Z17is_avx2_availablev>`, invoked from the following backtrace:
+
+~~~cpp
+#0  0x0000555555b3ca70 in is_avx2_available() ()
+#1  0x0000555555a4ad7e in ml::cpu::convolution_2d_prepare(ml::Node*) ()
+#2  0x0000555555a47de7 in ml::Backend::prepare() ()
+#3  0x0000555555936c3e in ObjectDetectionWorkload::ObjectDetectionWorkload(SectionType, WorkloadOptions const*) ()
+~~~
+
+It's a simple function that returns 1 if available and 0 if not, which can be easily patched with:
+
+~~~nasm
+0x00000000005e8a70 <_Z17is_avx2_availablev>:
+  0x5e8a70:   48 31 c0                xor    %rax,%rax
+  0x5e8a73:   c3                      retq
+~~~
+
+If you want to 'fix' your Geekbench v6.2.0:
+~~~bash
+printf "\x48\x31\xc0\xc3" | dd of=geekbench_x86_64 bs=1 seek=$((0x5e8a70)) conv=notrunc
+~~~
+
+And finally, I was able to obtain the following final result:
+![gbfixed](/assets/img/gb/gbfixed.png)
+
+which you can [also check on the Geekbench website](https://browser.geekbench.com/v6/cpu/5893834).
+
 ## Final Thoughts
 I am a big fan of Geekbench and have been using it for several years. However, I was somewhat surprised by these results, which lead me to **not recommend** version 6 for mixed CPU comparisons involving support for AVX2 and non-AVX2 instructions. The results **will be** inaccurate, and under these circumstances, I can only recommend using Geekbench v5.
 
-Given its closed-source nature, what would certainly take me a day to analyze, I spent several days, which is precisely why I will always advocate for the use of FOSS: even though I discovered the issue, I can't even fix it, at most report it.
+Given its closed-source nature, what would certainly take me a day to analyze, I spent several days, which is precisely why I will always advocate for the use of FOSS.
 
 On a positive note, the binaries for Geekbench v6.2.0 were not stripped (fortunately! I hope this doesn't change). The project appears to be a well-written C++ code, which posed me an extra challenge to understand the generated asm code. The use of Intel TBB for multi-threading is also noteworthy.
 

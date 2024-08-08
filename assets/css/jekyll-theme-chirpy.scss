@@ -1,0 +1,14 @@
+---
+---
+
+@import 'main';
+
+/* append your custom style below */
+#main-wrapper {
+    background-image: url(bg.webp);
+    background-color: rgba(0,0,0,0.65);
+    background-blend-mode: overlay;
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+}

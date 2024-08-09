@@ -12,3 +12,12 @@
     background-size: cover;
     background-position: center;
 }
+
+.highlight,
+.highlight .w {
+    background-color: rgba(21,21,21,0.4) !important;
+}
+
+%code-snippet-bg {
+  background-color: rgba(21,21,21,0.4);
+}

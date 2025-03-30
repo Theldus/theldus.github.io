@@ -1,0 +1,7 @@
+website/posts
+website/about
+website/index.html
+src_posts/index.asm
+*~
+*.swp
+*.swo

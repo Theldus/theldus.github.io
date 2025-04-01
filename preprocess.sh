@@ -2,10 +2,12 @@
 
 # Function to HTML escape content
 html_escape() {
-    echo "$1" | sed -e 's/&/\&amp;/g' \
-                    -e 's/</\&lt;/g' \
-                    -e 's/>/\&gt;/g' \
-                    -e 's/%/MACRO_PERCENT /g'
+    echo "$1" | sed -e 's/&/\&ampMACRO_SEMICOL/g' \
+                    -e 's/</\&ltMACRO_SEMICOL/g' \
+                    -e 's/>/\&gtMACRO_SEMICOL/g' \
+                    -e 's/%/MACRO_PERCENT/g' \
+                    -e 's/#/MACRO_HASH/g' \
+                    -e 's/;/MACRO_SEMICOL/g'
 }
 
 # Temporary directory for intermediate files
@@ -65,10 +67,12 @@ BEGIN {
 # Inside code block: escape HTML and handle #
 in_code_block {
     # Escape HTML and handle #
-    gsub(/&/, "\\&amp;")
-    gsub(/</, "\\&lt;")
-    gsub(/>/, "\\&gt;")
-    gsub(/%/, "MACRO_PERCENT ")
+    gsub(/&/, "\\&ampMACRO_SEMICOL")
+    gsub(/</, "\\&ltMACRO_SEMICOL")
+    gsub(/>/, "\\&gtMACRO_SEMICOL")
+    gsub(/%/, "MACRO_PERCENT]")
+    gsub(/#/, "MACRO_HASH")
+    gsub(/;/, "MACRO_SEMICOL")
     print
     next
 }

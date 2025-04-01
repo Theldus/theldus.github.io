@@ -4,7 +4,10 @@
 ;
 
 %include "config.inc"
+
+%ifndef IS_POST
 %define IS_POST 0
+%endif
 
 %ifndef PAGE_TITLE_STR
 %define PAGE_TITLE_STR BLOG_TITLE
@@ -15,7 +18,7 @@
 %define POST_TITLE_STR %1
 %define PAGE_TITLE_STR %1
 %ifdef POST_DATE_CREATED
-    %define IS_POST 1
+	%define IS_POST 1
 %endif
 %endmacro
 
@@ -23,7 +26,7 @@
 %define POST_DATE_CREATED  %1
 %define POST_DATE_MODIFIED %2
 %ifdef POST_TITLE_STR
-    %define IS_POST 1
+	%define IS_POST 1
 %endif
 %endmacro
 
@@ -35,10 +38,12 @@
 
 ; Text formatting
 %define MACRO_PERCENT   %
-%define B(text)         <b>text</b>
-%define BBB(text)       <b>text</b>
-%define I(text)         <em>text</em>
-%define U(text)         <u>text</u>
+%define MACRO_HASH      #
+%define MACRO_SEMIC     ;
+%define B(text+)        <b>text</b>
+%define BBB(text+)      <b>text</b>
+%define I(text+)        <em>text</em>
+%define U(text+)        <u>text</u>
 %define LINK(url, text) <a href=url>text</a>
 
 ; Paragraphs
@@ -46,17 +51,39 @@
 %define PE </p>
 
 ; Headings
-%define S(text)    <h2>text</h2>
-%define SS(text)   <h3>text</h3>
-%define SSS(text)  <h4>text</h4>
-%define SSSS(text) <h5>text</h5>
+%define S(text+)    <h2>text</h2>
+%define SS(text+)   <h3>text</h3>
+%define SSS(text+)  <h4>text</h4>
+%define SSSS(text+) <h5>text</h5>
 
-
+;
 ; Images with captions
+; Parameters:
+;   %1 = path/link to the image
+;   %2 = image description
+;
+%ifndef IMG_COUNT
 %assign IMG_COUNT 0
+%endif
+
 %macro  IMG 2
 <a href=%1 target="_blank">
-    <img src=%1 alt=%2 />
+	<img src=%1 alt=%2 />
+</a>
+%assign IMG_COUNT IMG_COUNT+1
+<p class="caption">Image IMG_COUNT: %2</p>
+%endmacro
+
+;
+; Images with captions
+; Parameters:
+;   %1 = path/link to the image src
+;   %2 = image description
+;   %3 = alternative link
+;
+%macro IMG_L 3
+<a href=%3 target="_blank">
+	<img src=%1 alt=%2 />
 </a>
 %assign IMG_COUNT IMG_COUNT+1
 <p class="caption">Image IMG_COUNT: %2</p>
@@ -70,7 +97,7 @@
 	</pre> \
 	<p class="caption"><a href=caption>File: caption</a></p>
 
-%define BC(src_code) <code>src_code</code>
+%define BC(src_code+) <code>src_code</code>
 
 ; Lists
 %define UL_CSS(css) <ul class=css>
@@ -107,4 +134,4 @@
 
 ; Footer and license
 %define LICENSE(url, text) \
-    <p class="license">This post is licensed under <a href=url>text</a> by the author.</p>
+	<p class="license">This post is licensed under <a href=url>text</a> by the author.</p>

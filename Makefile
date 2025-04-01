@@ -10,7 +10,7 @@ SRC_DIR  = src_posts
 MACROS = inc/header.inc inc/footer.inc inc/macros.inc inc/config.inc
 
 # Manually specified posts (without extensions)
-POSTS = slackware15-on-a-pentium-133
+POSTS = slackware15-on-a-pentium-133 helping-your-old-pc-build-faster-with-your-mobile
 
 # Convert source filenames to their target paths
 POSTS_HTML     = $(POSTS:%=$(POST_DIR)/%/index.html)

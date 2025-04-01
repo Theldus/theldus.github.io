@@ -249,7 +249,8 @@ necessary for distcc. LI_E
 UL_E
 
 S(Final thoughts)
-PS I have to say: I'm I(very) impressed with the results. I didn't expect my
+PS I have to say: I'm
+I(very) impressed with the results. I didn't expect my
 phone to be faster than my old laptop, let alone that it could significantly help
 the builds with distcc. PE
 

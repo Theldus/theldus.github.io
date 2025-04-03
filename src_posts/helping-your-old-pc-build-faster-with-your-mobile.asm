@@ -50,7 +50,7 @@ article is dedicated to people who have a similar HW and who might be able to
 benefit from it in some way.
 PE
 
-S(How to do it?)
+S How to do it?
 PS
 (If you are already happy with the results and have no intention of reproducing
 this, you can stop here)
@@ -70,7 +70,7 @@ already does for you, but below are the instructions to be done on your phone
 and on your PC.
 PE
 
-SSS(1 - Install and configure: Clang, distcc and OpenSSH on your phone:)
+SSS 1 - Install and configure: Clang, distcc and OpenSSH on your phone:
 
 PS Assuming Termux is already installed, install and configure these packages
 as below: PE
@@ -135,7 +135,7 @@ SSH. If you have/want to use other means, disregard this (and don't install
 OpenSSH).
 PE
 
-SSS(2 - On your PC, install distcc and move the system headers to your phone)
+SSS 2 - On your PC, install distcc and move the system headers to your phone
 
 BC_S
 #
@@ -174,7 +174,7 @@ PS B(Note 2:) If you chose not to install OpenSSH, copy host_include.tar.gz to y
 PS B(Note 3:) I'm assuming here that your PC I(already) have all the tools to
 build stuff I(without) distcc (Clang, Make and etc). PE
 
-SSS(3 - On your phone, 'replace' the Termux system header with the new one)
+SSS 3 - On your phone, 'replace' the Termux system header with the new one
 
 PS
 Now that everything is in place, the only thing that needs to be done is to 'replace' the Termux headers with the new ones:
@@ -191,7 +191,7 @@ $ tar xf host_include.tar.gz
 $ mv include $PREFIX/include
 BC_E
 
-SSS(Ready to run, go!)
+SSS Ready to run, go!
 PS Now everything should be configured and ready to run. Distcc only requires it
 to be invoked instead of your traditional CC and CXX. PE
 
@@ -225,7 +225,7 @@ you can BC(watch -n0.5 distccmon-text). PE
 
 %define LNK_FAQ "https://www.distcc.org/faq.html"
 
-S(Remarks)
+S Remarks
 UL_S
 
 LI_S As you can see, I didn't use the same Clang version between hosts. This
@@ -248,7 +248,7 @@ necessary for distcc. LI_E
 
 UL_E
 
-S(Final thoughts)
+S Final thoughts
 PS I have to say: I'm
 I(very) impressed with the results. I didn't expect my
 phone to be faster than my old laptop, let alone that it could significantly help
@@ -262,7 +262,7 @@ minutes without distcc), after all: if people usually spend several hours playin
 games on mobile (which use CPU + GPU intensively), what are a few minutes helping
 your poor PC ? PE
 
-S(Useful links)
+S Useful links
 %define LNK_DCC_SITE "https://www.distcc.org/"
 %define LNK_DCC_MAN  "https://linux.die.net/man/1/distcc"
 %define LNK_DCC_WIKI "https://wiki.archlinux.org/title/Distcc"

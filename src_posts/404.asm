@@ -2,7 +2,7 @@
 %include "macros.inc"
 %include "header.inc"
 
-S(ERROR 404)
+S ERROR 404
 PS
 The content you're looking for doesn't exist here, but please
 take a look at the LINK(/, homepage).

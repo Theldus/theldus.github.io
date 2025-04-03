@@ -13,7 +13,7 @@ INDEX=${SRC_POSTS}/index.asm
 cat<<EOF> ${INDEX}
 %include "macros.inc"
 %include "header.inc"
-S(My posts)
+S My posts
 UL_CSS("list-link-home")
 EOF
 

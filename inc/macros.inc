@@ -51,10 +51,68 @@
 %define PE </p>
 
 ; Headings
-%define S(text+)    <h2>text</h2>
-%define SS(text+)   <h3>text</h3>
-%define SSS(text+)  <h4>text</h4>
-%define SSSS(text+) <h5>text</h5>
+
+; Convert a title to an anchor tag
+%macro caption_to_link 1+
+	%defstr input_str %1
+	%assign i          1  ; Counter
+	%strlen len input_str ; String length
+	%defstr out_str       ; Output string
+	%rep len
+		%substr ch input_str i
+		%if ch >= 'A' && ch <= 'Z'
+			%substr ch 'abcdefghijklmnopqrstuvwxyz' ch+32-96
+			%strcat out_str out_str, ch
+		%elif (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
+			%strcat out_str out_str, ch
+		%elif (ch == ' ')
+			%strcat out_str out_str, '-'
+		%elif (ch == '-')
+			%strcat out_str out_str, ch
+		%endif
+		%assign i i+1
+	%endrep
+%endmacro
+
+; First level
+%macro S 1+
+caption_to_link %1
+%defstr hash #
+%strcat hash hash,out_str
+<h2 id=out_str>
+    <a href=hash class="heading-link">%1</a>
+</h2>
+%endmacro
+
+; Second level
+%macro SS 1+
+caption_to_link %1
+%defstr hash #
+%strcat hash hash,out_str
+<h3 id=out_str>
+    <a href=hash class="heading-link">%1</a>
+</h3>
+%endmacro
+
+; Third level
+%macro SSS 1+
+caption_to_link %1
+%defstr hash #
+%strcat hash hash,out_str
+<h4 id=out_str>
+    <a href=hash class="heading-link">%1</a>
+</h4>
+%endmacro
+
+; Fourth level
+%macro SSSS 1+
+caption_to_link %1
+%defstr hash #
+%strcat hash hash,out_str
+<h5 id=out_str>
+    <a href=hash class="heading-link">%1</a>
+</h5>
+%endmacro
 
 ;
 ; Images with captions

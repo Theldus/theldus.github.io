@@ -5,7 +5,7 @@
 %define BIOS_RE \
 "https://youtube.com/playlist?list=PLkUPMUHCWz715oncQgvepGkdHx58d6Ccp"
 
-S(About me)
+S About me
 PS
 Hello, and welcome to my blog.
 PE

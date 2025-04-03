@@ -15,7 +15,7 @@ SET_POST_DATES 2023-01-15, 2025-03-24
 IMG "/assets/img/slack15p133.png", \
     Slackware running on Pentium 133 MHz
 
-S(Introduction)
+S Introduction
 PS
 This mini-howto is intended to briefly address what was done in the video above:
 running Slackware 15.0, a recent Linux distro, on an old hw, from the 90s.
@@ -26,13 +26,13 @@ If you have 64MB of RAM or more, you can skip this entire tutorial,
 Slackware 15 works out-of-the-box. If you have less than that, move on.
 PE
 
-SS(Taking things out)
+SS Taking things out
 PS
 There are two major issues with booting a recent kernel in an environment with
 32MB of RAM (and by that I mean any distro): initrd and kernel.
 PE
 
-SSS(INITRD)
+SSS INITRD
 PS
 INITRD is supposedly a mini-version of your operating system, or at least the
 bare minimum needed for the rest of your system to load; you can think of it as
@@ -66,7 +66,7 @@ With that, it was possible to reduce the initrd from ~22MB to ~900kB, a huge
 improvement.
 PE
 
-SSS(Kernel)
+SSS Kernel
 PS
 Unfortunately the INITRD alone is not enough: even a 'Hello World'-initrd does
 not work, since the kernel refuses to load. So here things start to get
@@ -79,7 +79,7 @@ B(a lot) of time trying to add things to get something usable and failed at all
 of them. Start with 'i386_defconfig' and I(remove) whatever you don't need)
 PE
 
-SSSS(1 - Kernel base address)
+SSSS 1 - Kernel base address
 PS
 The first thing to do is modify the kernel's physical start address. By default,
 it starts at 16MB, and leaves very little room for the kernel and the rest of the
@@ -94,7 +94,7 @@ BC_E
 PS Using 2MB as the BC(base physical) address should be OK, I hope… at
 least I didn’t have any problems here. PE
 
-SSSS(2 - Remove drivers and (almost) everything else)
+SSSS 2 - Remove drivers and (almost) everything else
 UL_S
     LI_S There is no formula for what you should or shouldn't remove, just use \
     common sense: you do not want Linux not recognizing your disk controller,
@@ -128,7 +128,7 @@ things... The diff between the config above and the i386_defconfig:
 LINK(LNK_DIFF, diff)
 PE
 
-S(Final thoughts)
+S Final thoughts
 PS
 I didn't cover everything I wanted to here: you still have to shrink your
 Slackware install to fit on your old PC's disk... here I got about ~4.5GB by

@@ -153,7 +153,7 @@ caption_to_link %1
 %define BC_E </pre>
 %define BC_E_CAPTION(caption) \
 	</pre> \
-	<p class="caption"><a href=caption>File: caption</a></p>
+	<p class="caption"><a href=GIT_SITE_REPO/blob/master/caption>File: caption</a></p>
 
 %define BC(src_code+) <code>src_code</code>
 

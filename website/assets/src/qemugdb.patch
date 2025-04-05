@@ -1,0 +1,75 @@
+diff -x build -ruN qemu-8.2.0-rc4-old/target/i386/cpu.c qemu-8.2.0-rc4-new/target/i386/cpu.c
+--- qemu-8.2.0-rc4-old/target/i386/cpu.c    2023-12-13 16:44:49.000000000 -0300
++++ qemu-8.2.0-rc4-new/target/i386/cpu.c    2023-12-18 18:07:05.973940391 -0300
+@@ -5923,7 +5923,21 @@
+ #ifdef TARGET_X86_64
+     return "i386:x86-64";
+ #else
+-    return "i386";
++    X86CPU *cpu = X86_CPU(cs);
++    CPUX86State *env = &cpu->env;
++
++    /*
++     * ## Handle initial CPU architecture ##
++     *
++     * Check if protected mode or real mode.
++     * This is only useful when the GDB is attaching,
++     * mode switches after that aren't reflected
++     * here.
++     */
++    if (env->cr[0] & 1)
++      return "i386";
++    else
++      return "i8086";
+ #endif
+ }
+
+diff -x build -ruN qemu-8.2.0-rc4-old/target/i386/gdbstub.c qemu-8.2.0-rc4-new/target/i386/gdbstub.c
+--- qemu-8.2.0-rc4-old/target/i386/gdbstub.c    2023-12-13 16:44:49.000000000 -0300
++++ qemu-8.2.0-rc4-new/target/i386/gdbstub.c    2023-12-18 18:06:37.161940501 -0300
+@@ -118,7 +118,22 @@
+                 return gdb_get_regl(mem_buf, 0);
+             }
+         } else {
+-            return gdb_get_reg32(mem_buf, env->regs[gpr_map32[n]]);
++            /*
++             * ## Handle ESP ##
++             * If in protected-mode, do as usual...
++             */
++            if (env->cr[0] & 1) {
++                return gdb_get_reg32(mem_buf, env->regs[gpr_map32[n]]);
++            }
++
++            /* If real mode & !ESP, do as usual... */
++            if (n != R_ESP) {
++                return gdb_get_reg32(mem_buf, env->regs[gpr_map32[n]]);
++            }
++
++            /* If ESP, return it converted. */
++            return gdb_get_reg32(mem_buf,
++                (env->segs[R_SS].selector * 0x10) + env->regs[gpr_map32[n]]);
+         }
+     } else if (n >= IDX_FP_REGS && n < IDX_FP_REGS + 8) {
+         int st_index = n - IDX_FP_REGS;
+@@ -144,7 +159,20 @@
+                     return gdb_get_reg64(mem_buf, env->eip & 0xffffffffUL);
+                 }
+             } else {
+-                return gdb_get_reg32(mem_buf, env->eip);
++                /*
++                 * ## Handle EIP ##
++                 * qemu-system-i386 is handled here!
++                 */
++
++                /* If in protected-mode, do as usual... */
++                if (env->cr[0] & 1) {
++                    return gdb_get_reg32(mem_buf, env->eip);
++
++                /* Otherwise, returns the physical address. */
++                } else {
++                    return gdb_get_reg32(mem_buf,
++                        (env->segs[R_CS].selector * 0x10) + env->eip);
++                }
+             }
+         case IDX_FLAGS_REG:
+             return gdb_get_reg32(mem_buf, env->eflags);

@@ -39,7 +39,7 @@ $(POST_DIR)/%/index.html: $(SRC_DIR)/%.asm preprocess.sh $(MACROS)
 	@echo "  -> Pre-preprocessing $<"
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@
 	@echo "  -> NASM preprocessing..."
-	$(Q)nasm -I inc -E -w-pp-open-string $@ | grep -v "^%line" > $@.tmp
+	$(Q)nasm -I inc -E -w-pp-open-string $@ > $@.tmp
 	@echo "  -> Post-processing..."
 	$(Q)$(POSTPROCESS) $(@).tmp > $@
 	$(Q)rm $@.tmp
@@ -51,7 +51,7 @@ $(SRC_DIR)/index.asm: gen_index.sh $(POSTS_HTML)
 website/index.html: $(SRC_DIR)/index.asm preprocess.sh $(MACROS)
 	@echo "Building $@"
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@
-	$(Q)nasm -I inc -E -w-pp-open-string $@ | grep -v "^%line" > $@.tmp
+	$(Q)nasm -I inc -E -w-pp-open-string $@ > $@.tmp
 	@echo "  -> Post-processing..."
 	$(Q)$(POSTPROCESS) $(@).tmp > $@
 	$(Q)rm $@.tmp
@@ -59,7 +59,7 @@ website/index.html: $(SRC_DIR)/index.asm preprocess.sh $(MACROS)
 website/404.html: $(SRC_DIR)/404.asm preprocess.sh $(MACROS)
 	@echo "Building $@"
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@
-	$(Q)nasm -I inc -E -w-pp-open-string $@ | grep -v "^%line" > $@.tmp
+	$(Q)nasm -I inc -E -w-pp-open-string $@ > $@.tmp
 	@echo "  -> Post-processing..."
 	$(Q)$(POSTPROCESS) $(@).tmp > $@
 	$(Q)rm $@.tmp
@@ -68,7 +68,7 @@ website/about/index.html: $(SRC_DIR)/about.asm preprocess.sh $(MACROS)
 	@echo "Building $@"
 	$(Q)mkdir -p $(dir $@)
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@
-	$(Q)nasm -I inc -E -w-pp-open-string $@ | grep -v "^%line" > $@.tmp
+	$(Q)nasm -I inc -E -w-pp-open-string $@ > $@.tmp
 	@echo "  -> Post-processing..."
 	$(Q)$(POSTPROCESS) $(@).tmp > $@
 	$(Q)rm $@.tmp

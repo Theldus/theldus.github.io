@@ -21,8 +21,8 @@ NON_POSTS_HTML = website/index.html \
 				 website/about/index.html
 
 # Scripts
-PREPROCESS  = $(CURDIR)/preprocess.sh
-POSTPROCESS = $(CURDIR)/postprocess.sh
+PREPROCESS  = $(CURDIR)/proc.py preprocess
+POSTPROCESS = $(CURDIR)/proc.py postprocess
 GEN_INDEX  = $(CURDIR)/gen_index.sh
 
 # Pretty print
@@ -35,7 +35,7 @@ endif
 all: $(POSTS_HTML) website/index.html $(NON_POSTS_HTML)
 
 # Pattern rule to generate HTML from NASM
-$(POST_DIR)/%/index.html: $(SRC_DIR)/%.asm preprocess.sh $(MACROS)
+$(POST_DIR)/%/index.html: $(SRC_DIR)/%.asm proc.py $(MACROS)
 	@echo "Building post $@"
 	$(Q)mkdir -p $(dir $@)
 	@echo "  -> Pre-preprocessing $<"
@@ -50,7 +50,7 @@ $(SRC_DIR)/index.asm: gen_index.sh $(POSTS_HTML)
 	@echo "Generating $@"
 	$(Q)$(GEN_INDEX) $(POSTS)
 
-website/index.html: $(SRC_DIR)/index.asm preprocess.sh $(MACROS)
+website/index.html: $(SRC_DIR)/index.asm proc.py $(MACROS)
 	@echo "Building $@"
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@
 	$(Q)nasm -I inc -E -w-pp-open-string $@ > $@.tmp
@@ -58,7 +58,7 @@ website/index.html: $(SRC_DIR)/index.asm preprocess.sh $(MACROS)
 	$(Q)$(POSTPROCESS) $(@).tmp > $@
 	$(Q)rm $@.tmp
 
-website/404.html: $(SRC_DIR)/404.asm preprocess.sh $(MACROS)
+website/404.html: $(SRC_DIR)/404.asm proc.py $(MACROS)
 	@echo "Building $@"
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@
 	$(Q)nasm -I inc -E -w-pp-open-string $@ > $@.tmp
@@ -66,7 +66,7 @@ website/404.html: $(SRC_DIR)/404.asm preprocess.sh $(MACROS)
 	$(Q)$(POSTPROCESS) $(@).tmp > $@
 	$(Q)rm $@.tmp
 
-website/about/index.html: $(SRC_DIR)/about.asm preprocess.sh $(MACROS)
+website/about/index.html: $(SRC_DIR)/about.asm proc.py $(MACROS)
 	@echo "Building $@"
 	$(Q)mkdir -p $(dir $@)
 	$(Q)SRC_DIR=$(SRC_DIR) $(PREPROCESS) $< $@

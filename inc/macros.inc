@@ -124,7 +124,7 @@ caption_to_link %1
 %assign IMG_COUNT 0
 %endif
 
-%macro  IMG 2
+%macro  IMG 2+
 <a href=%1 target="_blank">
 	<img src=%1 alt=%2 />
 </a>

@@ -248,3 +248,28 @@ tbody tr:nth-child(odd) {
 .heading-link:hover {
     text-decoration: none;
 }
+
+/* Target the entire scrollbar */
+::-webkit-scrollbar {
+  width: 12px;               /* For vertical scrollbars   */
+  height: 12px;              /* For horizontal scrollbars */
+  background-color: #1e1e2e; /* Match body background     */
+}
+
+/* Target the scrollbar track */
+::-webkit-scrollbar-track {
+  background-color: #313244; /* Similar to pre background */
+  border-radius: 10px;
+}
+
+/* Target the scrollbar thumb */
+::-webkit-scrollbar-thumb {
+  background-color: #585c6d; /* A darker shade */
+  border-radius: 10px;
+  border: 2px solid #1e1e2e; /* Add a subtle border to separate from track */
+}
+
+/* Hover effect on the thumb */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6c7086; /* Slightly lighter on hover */
+}

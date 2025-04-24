@@ -138,6 +138,27 @@ caption_to_link %1
 ;
 ; Images with captions
 ; Parameters:
+;   %1 = size in percentage (0-100)
+;   %1 = path/link to the image
+;   %2 = image description
+;
+%macro  IMG_S 3+
+%defstr stri width:
+%defstr perc %2
+%strcat stri stri perc
+%strcat stri stri '%;'
+<a href=%1 target="_blank">
+	<img src=%1 alt=%3 style=stri/>
+</a>
+%assign IMG_COUNT IMG_COUNT+1
+<p class="caption">Image IMG_COUNT: %3</p>
+%undef stri
+%undef perc
+%endmacro
+
+;
+; Images with captions
+; Parameters:
 ;   %1 = path/link to the image src
 ;   %2 = image description
 ;   %3 = alternative link

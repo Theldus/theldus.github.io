@@ -38,7 +38,7 @@ def html_escape(content):
 	result = result.replace('#', 'MACRO_HASH')
 	result = result.replace(';', 'MACRO_SEMICOL')
 	result = result.replace(' ', '&nbspMACRO_SEMICOL')
-	result = result.replace('\t', '&nbspMACRO_SEMICOL&nbspMACRO_SEMICOL&nbspMACRO_SEMICOL&nbspMACRO_SEMICOL')
+	result = result.replace('\t', 'MACRO_TAB')
 	return result
 
 #
@@ -159,6 +159,7 @@ def postprocess_file(input_file, output_file=None):
 	content = content.replace('MACRO_PERCENT', '%')
 	content = content.replace('MACRO_HASH', '#')
 	content = content.replace('&nbsp;', ' ')
+	content = content.replace('MACRO_TAB', '\t');
 
 	# Restore all NASM keywords
 	for keyword in NASM_KEYWORDS:

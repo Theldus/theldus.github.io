@@ -57,7 +57,7 @@
 	%defstr input_str %1
 	%assign i          1  ; Counter
 	%strlen len input_str ; String length
-	%defstr out_str       ; Output string
+	%defstr out_str       ; Output string  TODO: this name should be changed!!!
 	%rep len
 		%substr ch input_str i
 		%if ch >= 'A' && ch <= 'Z'
@@ -72,6 +72,9 @@
 		%endif
 		%assign i i+1
 	%endrep
+	%undef i
+	%undef len
+	%undef input_str
 %endmacro
 
 ; First level

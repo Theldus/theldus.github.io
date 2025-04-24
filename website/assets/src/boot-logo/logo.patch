@@ -1,0 +1,25 @@
+diff -ruN --color logo-old/Kconfig logo/Kconfig
+--- logo-old/Kconfig	2022-02-01 13:27:16.000000000 -0300
++++ logo/Kconfig	2025-04-21 02:23:23.000000000 -0300
+@@ -28,6 +28,10 @@
+ 	bool "Standard 224-color Linux logo"
+ 	default y
+
++config LOGO_CPUSWAIFUS_CLUT224
++	bool "Show cute CPUs waifus for each core"
++	default y
++
+ config LOGO_DEC_CLUT224
+ 	bool "224-color Digital Equipment Corporation Linux logo"
+ 	depends on MACH_DECSTATION || ALPHA
+diff -ruN --color logo-old/Makefile logo/Makefile
+--- logo-old/Makefile	2022-02-01 13:27:16.000000000 -0300
++++ logo/Makefile	2025-04-21 02:23:11.000000000 -0300
+@@ -13,6 +13,7 @@
+ obj-$(CONFIG_LOGO_SUPERH_MONO)		+= logo_superh_mono.o
+ obj-$(CONFIG_LOGO_SUPERH_VGA16)		+= logo_superh_vga16.o
+ obj-$(CONFIG_LOGO_SUPERH_CLUT224)	+= logo_superh_clut224.o
++obj-$(CONFIG_LOGO_CPUSWAIFUS_CLUT224)   += logo_cpu0_clut224.o logo_cpu1_clut224.o logo_cpu2_clut224.o logo_cpu3_clut224.o
+
+ obj-$(CONFIG_SPU_BASE)			+= logo_spe_clut224.o
+

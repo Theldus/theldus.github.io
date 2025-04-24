@@ -1,0 +1,88 @@
+diff -ruN --color core-old/fbmem.c core/fbmem.c
+--- core-old/fbmem.c	2022-02-01 13:27:16.000000000 -0300
++++ core/fbmem.c	2025-04-21 20:53:49.000000000 -0300
+@@ -186,6 +186,18 @@
+
+ #ifdef CONFIG_LOGO
+
++extern const struct linux_logo logo_cpu0_clut224;
++extern const struct linux_logo logo_cpu1_clut224;
++extern const struct linux_logo logo_cpu2_clut224;
++extern const struct linux_logo logo_cpu3_clut224;
++
++static const struct linux_logo *logo_cpuswaifus[] = {
++	&logo_cpu0_clut224,
++	&logo_cpu1_clut224,
++	&logo_cpu2_clut224,
++	&logo_cpu3_clut224
++};
++
+ static inline unsigned safe_shift(unsigned d, int n)
+ {
+ 	return n < 0 ? d >> -n : d << n;
+@@ -456,7 +468,7 @@
+ }
+
+ static int fb_show_logo_line(struct fb_info *info, int rotate,
+-			     const struct linux_logo *logo, int y,
++			     const struct linux_logo *logo, int x, int y,
+ 			     unsigned int n)
+ {
+ 	u32 *palette = NULL, *saved_pseudo_palette = NULL;
+@@ -516,7 +528,7 @@
+ 		image.dx = (xres - n * (logo->width + 8) - 8) / 2;
+ 		image.dy = y ?: (yres - logo->height) / 2;
+ 	} else {
+-		image.dx = 0;
++		image.dx = x;
+ 		image.dy = y;
+ 	}
+
+@@ -590,7 +602,7 @@
+
+ 	for (i = 0; i < fb_logo_ex_num; i++)
+ 		y = fb_show_logo_line(info, rotate,
+-				      fb_logo_ex[i].logo, y, fb_logo_ex[i].n);
++				      fb_logo_ex[i].logo, 0, y, fb_logo_ex[i].n);
+
+ 	return y;
+ }
+@@ -685,6 +697,23 @@
+ 	return fb_prepare_extra_logos(info, height, yres);
+ }
+
++static int fb_show_logo_cpus_waifus(struct fb_info *info, int x, int y,
++				    int rotate, unsigned int cpus)
++{
++	unsigned int i;
++	unsigned int amnt;
++	unsigned int nlogos = ARRAY_SIZE(logo_cpuswaifus);
++
++	amnt = (cpus <= nlogos) ? cpus : nlogos;
++
++	for (i = 0; i < amnt; i++) {
++		y = fb_show_logo_line(info, rotate, logo_cpuswaifus[i], x, 0, 1);
++		x += logo_cpuswaifus[i]->width + 8;
++	}
++
++	return y;
++}
++
+ int fb_show_logo(struct fb_info *info, int rotate)
+ {
+ 	unsigned int count;
+@@ -694,8 +723,13 @@
+ 		return 0;
+
+ 	count = fb_logo_count < 0 ? num_online_cpus() : fb_logo_count;
+-	y = fb_show_logo_line(info, rotate, fb_logo.logo, 0, count);
++
++#ifdef CONFIG_LOGO_CPUSWAIFUS_CLUT224
++	y = fb_show_logo_cpus_waifus(info, 0, 0, rotate, count);
++#else
++	y = fb_show_logo_line(info, rotate, fb_logo.logo, 0, 0, count);
+ 	y = fb_show_extra_logos(info, y, rotate);
++#endif
+
+ 	return y;
+ }

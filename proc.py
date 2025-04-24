@@ -13,6 +13,7 @@ import re
 NASM_KEYWORDS = [
 	"CPU",
 	"at",
+	"static",
 ]
 
 #

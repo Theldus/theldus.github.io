@@ -1,15 +1,15 @@
 %include "macros.inc"
 SET_POST_TITLE Ricing my Tux boot logo
 SET_POST_DNBR  1
-SET_POST_DATES 2025-04-21, 2025-04-23
+SET_POST_DATES 2025-04-21, 2025-04-26
 
 %include "header.inc"
 
 %define LNK_INIT \
     "https://gist.github.com/Theldus/9825bc2ad9c4aee299cd312f956ff8ce"
 
-IMG_L "/assets/img/boot-logo/waifus.png", \
-    Final result: one waifu/image for each CPU core, \
+IMG_L "/assets/img/boot-logo/waifus_b4_after.png", \
+    Before and after: one waifu/image for each CPU core, \
     https://www.youtube.com/watch?v=MCWX04aM0mI
 
 PS
@@ -21,20 +21,20 @@ PE
 
 PS
 Anyway, I've always wanted to customize the Tux with something more, shall we
-say, interesting. However, I was never interested in putting a single image to
-replace the Tux, because why not several? For example, showing specifically the
-number of cores I have.
+say, interesting. However, I never intended in putting a single image to
+replace the Tux, seems boring, why not several? For example, showing
+specifically the number of cores I have.
 PE
 
 PS
-This post then aims to show what is needed to add as many images as we want and
+This post shows what is needed to do to add as many images as we want, and
 display them individually on the screen, just as shown in the first image of
-this post. I(Spoiler:) we're going to have to patch the kernel!).
+this post. I(Spoiler:) we have to patch the kernel!.
 PE
 
 PS_N
-The entire procedure shown here is geared towards Slackware, but all the steps
-can be perfectly adapted according to the Linux distro you use.
+The entire procedure shown here is focused on Slackware, but all the steps
+can be perfectly adapted to any Linux distro.
 PE
 
 S How does it work?
@@ -79,6 +79,14 @@ $ pngtopnm img3.png | ppmquant -fs 223 | pnmtoplainpnm > logo_cpu2_clut224.ppm
 $ pngtopnm img4.png | ppmquant -fs 223 | pnmtoplainpnm > logo_cpu3_clut224.ppm
 ...
 BC_E
+
+%define LNK_logoswaifu \
+"https://raw.githubusercontent.com/Theldus/theldus.github.io/refs/heads/master/website/assets/img/boot-logo/logos_waifu.zip"
+
+PS_I
+For those who liked my images, you can download the 8 I've created, already in
+PPM format and at 80x80 resolution, LINK(LNK_logoswaifu, here).
+PE
 
 SS 2) Integrating images into the kernel build
 PS
@@ -260,17 +268,17 @@ possible adaptations, which are trivial, as an exercise for the reader 😁.
 <br><br>
 
 I should also point out that there may be small differences even in v5.X
-kernels. On another machine of mine, which uses B(v5.4.186), there is a tiny
-difference in the BC(fb_show_logo()) function, which means the patch does not
-apply completely. I(However,) as mentioned, these are small enough differences
-to be corrected manually.
+kernels. On another machine I have, which uses B(v5.4.186), there is a tiny
+difference in the BC(fb_show_logo()) function, so the patch does not
+apply cleanly. I(However), as mentioned, these are small changes that are simple
+to fix manually.
 PE
 
 SS Kernel build!
 PS
-Once patched, just compile the kernel and use it. The exact procedure may vary
-depending on your Linux distribution, but the procedures below for Slackware
-should serve as general guidelines for any environment:
+Once patched, just build the kernel and use it. The exact procedure may vary
+depending on your Linux distro, but the procedures below (for Slackware)
+should serve as a guide for any environment:
 PE
 
 BC_S
@@ -315,22 +323,21 @@ BC_E
 
 S Final thoughts
 PS
-I'm quite happy with the result, and the idea can be expanded to other things,
-such as displaying a different logo depending on the CPU model or anything not
-defined at compile time.
+I'm quite happy with the result, and the idea can be expanded to many other
+things, such as displaying a different logo depending on the CPU model, and any
+other things not defined at build time.
 PE
 
 PS
-Realistically, I don't expect others to actually use this, so let it at least
-serve as curiosity, that kernel-dev can be fun too, and of course, not
-everything goes well the first time:
+Realistically, I don't expect others to actually use this, but I had a lot of
+fun doing this, and I B(had) to share. Things not always goes smooth, though:
 PE
 
 IMG_S "/assets/img/boot-logo/kpanic.png", 70, \
-not-so-scary kernel panic I had during code study 😂 (click to enlarge)
+not-so-scary kernel panic I had during my patch 😂 (click to enlarge)
 
 PS
-but it's also part of the fun =)
+but it's also part of the fun =).
 PE
 
 %include "footer.inc"

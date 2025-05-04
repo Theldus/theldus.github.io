@@ -40,6 +40,8 @@ def html_escape(content):
 	result = result.replace(';', 'MACRO_SEMICOL')
 	result = result.replace(' ', '&nbspMACRO_SEMICOL')
 	result = result.replace('\t', 'MACRO_TAB')
+	result = result.replace('\\', 'MACRO_SLASH')
+	result = result.replace('\n', 'MACRO_NEWLINE')
 	return result
 
 #
@@ -161,6 +163,8 @@ def postprocess_file(input_file, output_file=None):
 	content = content.replace('MACRO_HASH', '#')
 	content = content.replace('&nbsp;', ' ')
 	content = content.replace('MACRO_TAB', '\t');
+	content = content.replace('MACRO_SLASH', '\\');
+	content = content.replace('MACRO_NEWLINE', '\n');
 
 	# Restore all NASM keywords
 	for keyword in NASM_KEYWORDS:

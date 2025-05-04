@@ -1,7 +1,7 @@
 %include "macros.inc"
 SET_POST_TITLE Ricing my Tux boot logo
 SET_POST_DNBR  1
-SET_POST_DATES 2025-04-21, 2025-04-26
+SET_POST_DATES 2025-04-21, 2025-05-03
 
 %include "header.inc"
 
@@ -274,6 +274,14 @@ apply cleanly. I(However), as mentioned, these are small changes that are simple
 to fix manually.
 PE
 
+%define LNK_newpatch \
+https://github.com/Theldus/theldus.github.io/discussions/1#discussioncomment-13004097
+
+PS_N
+03-May: A huge thanks to B(@CodeAsm) who ported my patches to v6.14.4, so you 
+certainly want to check it out LINK(LNK_newpatch, his patch here).
+PE
+
 SS Kernel build!
 PS
 Once patched, just build the kernel and use it. The exact procedure may vary
@@ -320,6 +328,162 @@ image = /boot/vmlinuz-waifu-XYZ
 $ lilo
 $ sudo reboot
 BC_E
+
+S !! BONUS !!
+PS
+I was quite satisfied with the final result, and I didn’t want to make any more 
+changes until... my post was removed from a certain subreddit for being 
+considered 'fluff'.
+PE
+
+PS
+Anyway, maybe they just don’t like anime girls? I don’t know, but the posts on 
+my blog are B(mine), and here I can be as much of a weeb as I want.
+PE
+
+PS
+Without further ado, I present to you B(animated boot logos):
+PE
+
+YOUTUBE sJZE_rt3x-U, Do you like it?
+
+PS
+B(Yes!), you saw it correctly, now we have animation instead of boring static 
+Tuxes.
+PE
+
+PS The basic idea behind how it works is simple: create a kernel thread and draw 
+the logos in a loop indefinitely with some sleep interval between the drawings, 
+and voilà, we have animation. PE
+
+PS However, things are never exactly as we expect, and I had two main issues 
+that took me quite a while to understand:
+PE
+
+OL_S
+LI_S
+Drawing the logos produced kernel panic during the boot process, and it took me 
+a long time to understand that for some reason the kernel was deallocating the 
+memory portion related to the logo structures. It simply does not exist during 
+the entire lifetime of the kernel, and because of that, I was having segfault at 
+the kernel level.
+LI_E
+
+LI_S
+Even if the previous item was resolved, I also needed some way to I(keep) my 
+logos at the top of the screen. You might have noticed that by default the Tuxes 
+disappear after a simple BC(clear) or running BC(htop) for example, I don't want 
+that!
+LI_E
+
+OL_E
+
+PS
+The solution for both points wasn't complicated:
+PE
+
+OL_S
+LI_S
+Instead of trying to locate where this happens in the kernel, a simpler solution:
+duplicate the structures in a dynamic memory portion that I control (i.e.,
+BC(kmalloc()+memcpy())), and this indeed solved the first problem.
+LI_E
+
+LI_S
+For the second point, enter B(DECOM), or B(DEC Origin Mode).
+LI_E
+
+OL_E
+
+SS DEC Origin Mode
+
+%define LNK_vt102 \
+"https://elixir.bootlin.com/linux/v5.15.19/source/drivers/tty/vt/vt.c"
+
+PS
+While I was reading the VT102 driver in the Linux kernel
+(LINK(LNK_vt102, drivers/tty/vt.c)) to I(try) to gain some insight about what
+could be done, I came across some curious things: some TTY routines
+(like BC(gotoxy())) have some checks for BC(vt_decom). If BC(vt_decom) was
+enabled, then conveniently the TTY considered a 'top' for calculating the
+Y-coordinates, that is, movements were relative to a margin, not 0-based, and
+bingo!, this is I(exactly) what we're looking for.
+PE
+
+PS_N
+DEC Origin Mode (DECOM) is a terminal control mode inherited from the old VT100 
+and VT102 terminals. When active, it redefines the cursor coordinate system to 
+consider an upper limit (top margin) and, in some cases, lower limit (bottom 
+margin), instead of treating the entire screen as an absolute grid. This allows 
+operations such as cursor movement, scrolling, and line erasure to be performed 
+only within a delimited region, useful for applications that need to preserve 
+headers or footers. In the Linux kernel, this behavior is controlled by the
+BC(vt_decom) flag!
+PE
+
+%define LNK_fbcon \
+"https://elixir.bootlin.com/linux/v5.15.19/source/drivers/video/fbdev/core/fbcon.c#L658"
+
+PS
+This 'top', in turn, is conveniently calculated by the
+BC(fbcon_prepare_logo()) routine (LINK(LNK_fbcon, drivers/video/fbdev/fbcon.c)) 
+and in fact the top is considered by the TTY when performing scrolls, otherwise, 
+the Tuxes at the top wouldn't make sense, right? However, there were two issues:
+B(a)) the "decom" mode wasn't enabled by default,
+B(b)) even if it was, a "tty reset" disables the mode I(and) clears the
+previously defined top coordinates.
+PE
+
+PS
+The challenge then became to investigate the kernel source for: B(a)) places
+where DECOM mode was forcefully disabled (such as on TTY reset!), B(b)) places
+where the top could be reset. Once these points were identified, it was then
+possible to make my images remain at the top indefinitely without interfering
+with other applications.
+PE
+
+SS New kernel patch!
+PS
+The patch below, again, was made and tested on kernel B(v5.15.19), and can be 
+applied without issues up to the most recent LTS: B(v5.15.181) (2025-05-02). For 
+newer or older versions, please make the necessary adjustments.
+PE
+
+PS
+To apply it, just do:
+PE
+
+BC_S
+$ cd /usr/src/linux-5.15.181
+$ patch -p1 < /path/to/patch-animated.patch
+patching file drivers/tty/vt/vt.c
+patching file drivers/video/fbdev/core/fbcon.c
+Hunk #1 succeeded at 1260 (offset -3 lines).
+Hunk #2 succeeded at 2082 (offset 38 lines).
+Hunk #3 succeeded at 2191 (offset 38 lines).
+patching file drivers/video/fbdev/core/fbmem.c
+Hunk #1 succeeded at 38 (offset 2 lines).
+Hunk #2 succeeded at 192 (offset 2 lines).
+Hunk #3 succeeded at 492 (offset 2 lines).
+Hunk #4 succeeded at 552 with fuzz 1 (offset 2 lines).
+Hunk #5 succeeded at 626 (offset 2 lines).
+Hunk #6 succeeded at 721 (offset 2 lines).
+Hunk #7 succeeded at 880 (offset 2 lines).
+patching file drivers/video/logo/Kconfig
+patching file drivers/video/logo/Makefile
+patching file include/linux/fb.h
+Hunk #2 succeeded at 625 (offset 12 lines).
+BC_E
+
+PS Patch: PE
+BC_FILE(website/assets/src/boot-logo/patch-animated.patch)
+
+%define LNK_torakoppm \
+"https://raw.githubusercontent.com/Theldus/theldus.github.io/refs/heads/master/website/assets/img/boot-logo/logos_torako_animated.zip"
+
+PS Sorry for the size, but this time the patch grew a bit more than I expected. 
+The frame sequence (if you want to use Torako) can be
+LINK(LNK_torakoppm, downloaded here). PE
 
 S Final thoughts
 PS

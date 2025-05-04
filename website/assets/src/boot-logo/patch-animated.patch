@@ -1,0 +1,447 @@
+diff --git a/drivers/tty/vt/vt.c b/drivers/tty/vt/vt.c
+index 7359c3e..5c206ab 100644
+--- a/drivers/tty/vt/vt.c
++++ b/drivers/tty/vt/vt.c
+@@ -1322,8 +1322,13 @@ static int vc_do_resize(struct tty_struct *tty, struct vc_data *vc,
+ 	kfree(oldscreen);
+ 
+ 	/* do part of a reset_terminal() */
+-	vc->vc_top = 0;
+-	vc->vc_bottom = vc->vc_rows;
++
++	/* only reset the top if not built with waifu mode */
++	if (!vc->vc_decom) {
++		vc->vc_top = 0;
++		vc->vc_bottom = vc->vc_rows;
++	}
++
+ 	gotoxy(vc, vc->state.x, vc->state.y);
+ 	save_cur(vc);
+ 
+@@ -1909,8 +1914,12 @@ static void set_mode(struct vc_data *vc, int on_off)
+ 				}
+ 				break;
+ 			case 6:			/* Origin relative/absolute */
+-				vc->vc_decom = on_off;
+-				gotoxay(vc, 0, 0);
++				/* Only allow changes on DEC Mode if
++				 * not using our special build =). */
++				if (!vc->vc_decom) {
++					vc->vc_decom = on_off;
++					gotoxay(vc, 0, 0);
++				}
+ 				break;
+ 			case 7:			/* Autowrap on/off */
+ 				vc->vc_decawm = on_off;
+@@ -2083,8 +2092,12 @@ static void reset_terminal(struct vc_data *vc, int do_clear)
+ {
+ 	unsigned int i;
+ 
+-	vc->vc_top		= 0;
+-	vc->vc_bottom		= vc->vc_rows;
++	/* Only change top if not in DEC Mode. */
++	if (!vc->vc_decom) {
++		vc->vc_top	  = 0;
++		vc->vc_bottom = vc->vc_rows;
++	}
++
+ 	vc->vc_state		= ESnormal;
+ 	vc->vc_priv		= EPecma;
+ 	vc->vc_translate	= set_translate(LAT1_MAP, vc);
+@@ -2100,7 +2113,10 @@ static void reset_terminal(struct vc_data *vc, int do_clear)
+ 	vc->vc_toggle_meta	= 0;
+ 
+ 	vc->vc_decscnm		= 0;
+-	vc->vc_decom		= 0;
++
++	/* Do *not* reset decom.
++	vc->vc_decom		= 0;  */
++
+ 	vc->vc_decawm		= 1;
+ 	vc->vc_deccm		= global_cursor_default;
+ 	vc->vc_decim		= 0;
+@@ -2492,7 +2508,10 @@ static void do_con_trol(struct tty_struct *tty, struct vc_data *vc, int c)
+ 			/* Minimum allowed region is 2 lines */
+ 			if (vc->vc_par[0] < vc->vc_par[1] &&
+ 			    vc->vc_par[1] <= vc->vc_rows) {
+-				vc->vc_top = vc->vc_par[0] - 1;
++
++				if (!vc->vc_decom)
++					vc->vc_top = vc->vc_par[0] - 1;
++
+ 				vc->vc_bottom = vc->vc_par[1];
+ 				gotoxay(vc, 0, 0);
+ 			}
+diff --git a/drivers/video/fbdev/core/fbcon.c b/drivers/video/fbdev/core/fbcon.c
+index 22bb389..99a328a 100644
+--- a/drivers/video/fbdev/core/fbcon.c
++++ b/drivers/video/fbdev/core/fbcon.c
+@@ -1263,7 +1263,9 @@ static void fbcon_clear(struct vc_data *vc, int sy, int sx, int height,
+ 		return;
+ 
+ 	if (sy < vc->vc_top && vc->vc_top == logo_lines) {
+-		vc->vc_top = 0;
++		if (!vc->vc_decom)
++			vc->vc_top = 0;
++
+ 		/*
+ 		 * If the font dimensions are not an integral of the display
+ 		 * dimensions then the ops->clear below won't end up clearing
+@@ -2042,13 +2044,15 @@ static int fbcon_switch(struct vc_data *vc)
+ 	info = registered_fb[con2fb_map[vc->vc_num]];
+ 	ops = info->fbcon_par;
+ 
+-	if (logo_shown >= 0) {
+-		struct vc_data *conp2 = vc_cons[logo_shown].d;
++	if (!vc->vc_decom) {
++		if (logo_shown >= 0) {
++			struct vc_data *conp2 = vc_cons[logo_shown].d;
+ 
+-		if (conp2->vc_top == logo_lines
+-		    && conp2->vc_bottom == conp2->vc_rows)
+-			conp2->vc_top = 0;
+-		logo_shown = FBCON_LOGO_CANSHOW;
++			if (conp2->vc_top == logo_lines
++			    && conp2->vc_bottom == conp2->vc_rows)
++				conp2->vc_top = 0;
++			logo_shown = FBCON_LOGO_CANSHOW;
++		}
+ 	}
+ 
+ 	prev_console = ops->currcon;
+@@ -2149,11 +2153,18 @@ static int fbcon_switch(struct vc_data *vc)
+ 
+ 		logo_shown = fg_console;
+ 		/* This is protected above by initmem_freed */
+-		fb_show_logo(info, ops->rotate);
++		fb_show_logo(info, ops->rotate, vc);
+ 		update_region(vc,
+ 			      vc->vc_origin + vc->vc_size_row * vc->vc_top,
+ 			      vc->vc_size_row * (vc->vc_bottom -
+ 						 vc->vc_top) / 2);
++		/*
++		 * Enable DEC Origin Mode, so our top remains reserved
++		 * for our logo.
++		 */
++#ifdef CONFIG_LOGO_CPUSWAIFUS_CLUT224
++		vc->vc_decom = 1;
++#endif
+ 		return 0;
+ 	}
+ 	return 1;
+diff --git a/drivers/video/fbdev/core/fbmem.c b/drivers/video/fbdev/core/fbmem.c
+index 7bd5e2a..eaa8130 100644
+--- a/drivers/video/fbdev/core/fbmem.c
++++ b/drivers/video/fbdev/core/fbmem.c
+@@ -36,6 +36,10 @@
+ #include <linux/mem_encrypt.h>
+ #include <linux/pci.h>
+ 
++#include <linux/vt_kern.h>
++#include <linux/kthread.h>
++#include <linux/delay.h>
++
+ #include <asm/fb.h>
+ 
+ 
+@@ -186,6 +190,36 @@ EXPORT_SYMBOL(fb_get_buffer_offset);
+ 
+ #ifdef CONFIG_LOGO
+ 
++extern const struct linux_logo logo_frm0_clut224;
++extern const struct linux_logo logo_frm1_clut224;
++extern const struct linux_logo logo_frm2_clut224;
++extern const struct linux_logo logo_frm3_clut224;
++
++extern const struct linux_logo logo_frm4_clut224;
++extern const struct linux_logo logo_frm5_clut224;
++extern const struct linux_logo logo_frm6_clut224;
++extern const struct linux_logo logo_frm7_clut224;
++
++extern const struct linux_logo logo_frm8_clut224;
++extern const struct linux_logo logo_frm9_clut224;
++extern const struct linux_logo logo_frm10_clut224;
++extern const struct linux_logo logo_frm11_clut224;
++
++extern const struct linux_logo logo_frm12_clut224;
++extern const struct linux_logo logo_frm13_clut224;
++extern const struct linux_logo logo_frm14_clut224;
++extern const struct linux_logo logo_frm15_clut224;
++
++static const struct linux_logo *logo_orig_waifu_frames[] = {
++&logo_frm0_clut224,  &logo_frm1_clut224,  &logo_frm2_clut224,  &logo_frm3_clut224,
++&logo_frm4_clut224,  &logo_frm5_clut224,  &logo_frm6_clut224,  &logo_frm7_clut224,
++&logo_frm8_clut224,  &logo_frm9_clut224,  &logo_frm10_clut224, &logo_frm11_clut224,
++&logo_frm12_clut224, &logo_frm13_clut224, &logo_frm14_clut224, &logo_frm15_clut224,
++};
++
++static struct linux_logo waifu_frames_fixed[16];
++
++
+ static inline unsigned safe_shift(unsigned d, int n)
+ {
+ 	return n < 0 ? d >> -n : d << n;
+@@ -456,7 +490,7 @@ static void fb_do_show_logo(struct fb_info *info, struct fb_image *image,
+ }
+ 
+ static int fb_show_logo_line(struct fb_info *info, int rotate,
+-			     const struct linux_logo *logo, int y,
++			     const struct linux_logo *logo, int x, int y,
+ 			     unsigned int n)
+ {
+ 	u32 *palette = NULL, *saved_pseudo_palette = NULL;
+@@ -516,7 +550,7 @@ static int fb_show_logo_line(struct fb_info *info, int rotate,
+ 		image.dx = (xres - n * (logo->width + 8) - 8) / 2;
+ 		image.dy = y ?: (yres - logo->height) / 2;
+ 	} else {
+-		image.dx = 0;
++		image.dx = x;
+ 		image.dy = y;
+ 	}
+ 
+@@ -590,7 +624,7 @@ static int fb_show_extra_logos(struct fb_info *info, int y, int rotate)
+ 
+ 	for (i = 0; i < fb_logo_ex_num; i++)
+ 		y = fb_show_logo_line(info, rotate,
+-				      fb_logo_ex[i].logo, y, fb_logo_ex[i].n);
++				      fb_logo_ex[i].logo, 0, y, fb_logo_ex[i].n);
+ 
+ 	return y;
+ }
+@@ -685,7 +719,157 @@ int fb_prepare_logo(struct fb_info *info, int rotate)
+ 	return fb_prepare_extra_logos(info, height, yres);
+ }
+ 
+-int fb_show_logo(struct fb_info *info, int rotate)
++struct kthr_waifu_info {
++	struct task_struct *thread;
++	struct fb_info *info;
++	struct vc_data *vc;
++	int ncpus;
++	int rotate;
++	int x;
++} wi = {0};
++
++static void* dup_linux_logo(
++	struct linux_logo *const logo_dst,
++	const struct linux_logo *const logo_src)
++{
++	unsigned char *clut;
++	unsigned char *data;
++	int csize;
++	int dsize;
++
++	csize = logo_src->clutsize * 3;
++	dsize = logo_src->width * logo_src->height;
++
++	logo_dst->type     = logo_src->type;
++	logo_dst->width    = logo_src->width;
++	logo_dst->height   = logo_src->height;
++	logo_dst->clutsize = logo_src->clutsize;
++	clut               = kmalloc(csize, GFP_KERNEL);
++	if (!clut) {
++		pr_info("dup_linux_logo: Unable to duplicate clut!\n");
++		return NULL;
++	}
++	data               = kmalloc(dsize, GFP_KERNEL);
++	if (!data) {
++		pr_info("dup_linux_logo: Unable to duplicate data!\n");
++		kfree(clut);
++		return NULL;
++	}
++
++	memcpy(clut, logo_src->clut, csize);
++	memcpy(data, logo_src->data, dsize);
++	logo_dst->clut = clut;
++	logo_dst->data = data;
++	return logo_dst;
++}
++
++static void free_linux_logo(const struct linux_logo *const logo)
++{
++	if (!logo)
++		return;
++	if (logo->clut)
++		kfree(logo->clut);
++	if (logo->data)
++		kfree(logo->data);
++}
++
++static void free_all_linux_logos(void)
++{
++	unsigned int nframes;
++	int i;
++
++	nframes = ARRAY_SIZE(logo_orig_waifu_frames);
++	for (i = 0; i < nframes; i++)
++		free_linux_logo(&waifu_frames_fixed[i]);
++}
++
++static int kthread_show_anim_waifu(void *unused)
++{
++	int i;
++	int x;
++	unsigned idx;
++	unsigned int nframes;
++	((void)unused);
++
++	nframes = ARRAY_SIZE(logo_orig_waifu_frames);
++
++	idx = 0;
++
++	allow_signal(SIGKILL);
++	pr_info("kthread_show_anim_waifu: started!!\n");
++
++	while (!kthread_should_stop()) {
++		if (signal_pending(wi.thread))
++            break;
++
++		/* Sleep for 500ms, you might want to configure this
++		 * if you think its too fast/slow/resource-intensive.
++		 */
++		msleep_interruptible(CONFIG_LOGO_CPUWAIFUS_DELAY);
++
++		x = wi.x;
++		for (i = 0; i < wi.ncpus; i++) {
++			fb_show_logo_line(
++				wi.info,
++				wi.rotate,
++				&waifu_frames_fixed[idx],
++				x,
++				0,     /* y. */
++				1);    /* 1 logo per time. */
++
++			x += waifu_frames_fixed[idx].width + 8;
++		}
++		idx = (idx + 1) % nframes;
++	}
++
++	wi.vc->vc_decom = 0;
++	wi.vc->vc_top   = 0;
++
++	free_all_linux_logos();
++
++	pr_info("kthread_show_anim_waifu: stopped!\n");
++	do_exit(0);
++	return 0;
++}
++
++static int fb_show_logo_cpus_waifus(struct fb_info *info, int x, int y,
++				    int rotate, unsigned int ncpus, struct vc_data *vc)
++{
++	unsigned int i;
++	unsigned int nframes;
++
++	nframes = ARRAY_SIZE(logo_orig_waifu_frames);
++
++	for (i = 0; i < nframes; i++) {
++		if (!dup_linux_logo(&waifu_frames_fixed[i],
++			logo_orig_waifu_frames[i])) {
++			break;
++		}
++	}
++
++	if (i != nframes) {
++		free_all_linux_logos();
++		return y;
++	}
++
++	wi.rotate = rotate;
++	wi.ncpus  = ncpus;
++	wi.info   = info;
++	wi.x      = x;
++	wi.vc     = vc;
++	wi.thread = kthread_run(kthread_show_anim_waifu, NULL,
++		"kthread_waifu");
++
++	if (wi.thread)
++		pr_info("fb_show_logo_cpus_waifus: kthread created!");
++	else
++		pr_info("fb_show_logo_cpus_waifus: kthread NOT created!");
++
++	return y;
++}
++
++
++int fb_show_logo(struct fb_info *info, int rotate, struct vc_data *vc)
+ {
+ 	unsigned int count;
+ 	int y;
+@@ -694,14 +878,19 @@ int fb_show_logo(struct fb_info *info, int rotate)
+ 		return 0;
+ 
+ 	count = fb_logo_count < 0 ? num_online_cpus() : fb_logo_count;
+-	y = fb_show_logo_line(info, rotate, fb_logo.logo, 0, count);
++
++#ifdef CONFIG_LOGO_CPUSWAIFUS_CLUT224
++	y = fb_show_logo_cpus_waifus(info, 0, 0, rotate, count, vc);
++#else
++	y = fb_show_logo_line(info, rotate, fb_logo.logo, 0, 0, count);
+ 	y = fb_show_extra_logos(info, y, rotate);
++#endif
+ 
+ 	return y;
+ }
+ #else
+ int fb_prepare_logo(struct fb_info *info, int rotate) { return 0; }
+-int fb_show_logo(struct fb_info *info, int rotate) { return 0; }
++int fb_show_logo(struct fb_info *info, int rotate, struct vc_data *vc) { return 0; }
+ #endif /* CONFIG_LOGO */
+ EXPORT_SYMBOL(fb_prepare_logo);
+ EXPORT_SYMBOL(fb_show_logo);
+diff --git a/drivers/video/logo/Kconfig b/drivers/video/logo/Kconfig
+index 6d6f8c0..11a20ee 100644
+--- a/drivers/video/logo/Kconfig
++++ b/drivers/video/logo/Kconfig
+@@ -28,6 +28,14 @@ config LOGO_LINUX_CLUT224
+ 	bool "Standard 224-color Linux logo"
+ 	default y
+ 
++config LOGO_CPUSWAIFUS_CLUT224
++	bool "Shows an animated image for each core"
++	default y
++
++config LOGO_CPUWAIFUS_DELAY
++	int "Delay (in ms) between each frame"
++	default 500
++
+ config LOGO_DEC_CLUT224
+ 	bool "224-color Digital Equipment Corporation Linux logo"
+ 	depends on MACH_DECSTATION || ALPHA
+diff --git a/drivers/video/logo/Makefile b/drivers/video/logo/Makefile
+index 895c60b..60f98c9 100644
+--- a/drivers/video/logo/Makefile
++++ b/drivers/video/logo/Makefile
+@@ -13,6 +13,11 @@ obj-$(CONFIG_LOGO_SUN_CLUT224)		+= logo_sun_clut224.o
+ obj-$(CONFIG_LOGO_SUPERH_MONO)		+= logo_superh_mono.o
+ obj-$(CONFIG_LOGO_SUPERH_VGA16)		+= logo_superh_vga16.o
+ obj-$(CONFIG_LOGO_SUPERH_CLUT224)	+= logo_superh_clut224.o
++obj-$(CONFIG_LOGO_CPUSWAIFUS_CLUT224) += \
++	logo_frm0_clut224.o  logo_frm1_clut224.o  logo_frm2_clut224.o  logo_frm3_clut224.o  \
++	logo_frm4_clut224.o  logo_frm5_clut224.o  logo_frm6_clut224.o  logo_frm7_clut224.o  \
++	logo_frm8_clut224.o  logo_frm9_clut224.o  logo_frm10_clut224.o logo_frm11_clut224.o \
++	logo_frm12_clut224.o logo_frm13_clut224.o logo_frm14_clut224.o logo_frm15_clut224.o
+ 
+ obj-$(CONFIG_SPU_BASE)			+= logo_spe_clut224.o
+ 
+diff --git a/include/linux/fb.h b/include/linux/fb.h
+index 02f362c..3700dd3 100644
+--- a/include/linux/fb.h
++++ b/include/linux/fb.h
+@@ -8,6 +8,7 @@
+ 
+ #define FBIO_CURSOR            _IOWR('F', 0x08, struct fb_cursor_user)
+ 
++#include <linux/console.h>
+ #include <linux/fs.h>
+ #include <linux/init.h>
+ #include <linux/workqueue.h>
+@@ -612,7 +613,7 @@ extern int remove_conflicting_framebuffers(struct apertures_struct *a,
+ 					   const char *name, bool primary);
+ extern bool is_firmware_framebuffer(struct apertures_struct *a);
+ extern int fb_prepare_logo(struct fb_info *fb_info, int rotate);
+-extern int fb_show_logo(struct fb_info *fb_info, int rotate);
++extern int fb_show_logo(struct fb_info *fb_info, int rotate, struct vc_data *vc);
+ extern char* fb_get_buffer_offset(struct fb_info *info, struct fb_pixmap *buf, u32 size);
+ extern void fb_pad_unaligned_buffer(u8 *dst, u32 d_pitch, u8 *src, u32 idx,
+ 				u32 height, u32 shift_high, u32 shift_low, u32 mod);

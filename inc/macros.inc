@@ -118,6 +118,33 @@ caption_to_link %1
 %endmacro
 
 ;
+; YT player
+; Parameters:
+;   %1 = video code, as youtube.com/?v=<video>
+;   %2 = caption
+;
+%macro YOUTUBE 2+
+%defstr STR_VIDEO_CODE %1
+%defstr STR_LINK  https://www.youtube.com/embed/
+%strcat STR_LINK  STR_LINK STR_VIDEO_CODE
+<p class="caption" align="center">
+<iframe width="660" height="371"
+  src=STR_LINK
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write;
+    encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen>
+</iframe>
+<br>
+%2
+</p>
+%undef STR_VIDEO_CODE
+%undef STR_LINK
+%endmacro
+
+;
 ; Images with captions
 ; Parameters:
 ;   %1 = path/link to the image

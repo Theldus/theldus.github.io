@@ -14,7 +14,8 @@ POSTS = slackware15-on-a-pentium-133 \
         helping-your-old-pc-build-faster-with-your-mobile \
         the-only-proper-way-to-debug-16bit-code \
         beware-with-geekbench-v6-results \
-        ricing-my-tux-boot-logo
+        ricing-my-tux-boot-logo \
+        the-weird-way-aix-handles-syscalls
 
 # Convert source filenames to their target paths
 POSTS_HTML     = $(POSTS:%=$(POST_DIR)/%/index.html)
